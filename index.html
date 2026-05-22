@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Rutas y Servicios</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-background-primary: #ffffff;
+            --color-background-secondary: #f5f5f5;
+            --color-background-tertiary: #efefef;
+            --color-background-success: #e8f5e9;
+            --color-background-danger: #ffebee;
+            --color-background-info: #e3f2fd;
+            --color-border-tertiary: rgba(0, 0, 0, 0.15);
+            --color-border-secondary: rgba(0, 0, 0, 0.3);
+            --color-border-primary: rgba(0, 0, 0, 0.4);
+            --color-border-success: rgba(76, 175, 80, 0.3);
+            --color-border-danger: rgba(244, 67, 54, 0.3);
+            --color-text-primary: #000000;
+            --color-text-secondary: #666666;
+            --color-text-tertiary: #999999;
+            --color-text-success: #2e7d32;
+            --color-text-danger: #c62828;
+            --color-text-warning: #f57f17;
+            --color-text-info: #1565c0;
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-background-primary: #1e1e1e;
+                --color-background-secondary: #2d2d2d;
+                --color-background-tertiary: #3a3a3a;
+                --color-background-success: #1b5e20;
+                --color-background-danger: #b71c1c;
+                --color-background-info: #0d47a1;
+                --color-text-primary: #ffffff;
+                --color-text-secondary: #aaaaaa;
+                --color-text-tertiary: #777777;
+                --color-text-success: #81c784;
+                --color-text-danger: #ef5350;
+                --color-text-warning: #ffb74d;
+                --color-text-info: #64b5f6;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: var(--color-background-tertiary);
+            color: var(--color-text-primary);
+        }
+
+        @media print {
+            body { background: white; }
+            .no-print { display: none !important; }
+        }
+
+        input[type="number"],
+        input[type="text"],
+        input[type="email"],
+        select {
+            background: var(--color-background-primary);
+            border: 0.5px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-md);
+            padding: 8px 12px;
+            font-size: 16px;
+            width: 100%;
+            transition: border-color 0.2s;
+            color: var(--color-text-primary);
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--color-border-primary);
+            box-shadow: 0 0 0 3px var(--color-background-info);
+        }
+
+        button {
+            background: var(--color-background-secondary);
+            border: 0.5px solid var(--color-border-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: var(--color-text-primary);
+        }
+
+        button:hover {
+            background: var(--color-background-tertiary);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--color-background-success);
+            color: var(--color-text-success);
+            border-color: var(--color-border-success);
+        }
+
+        .card {
+            background: var(--color-background-primary);
+            border: 0.5px solid var(--color-border-tertiary);
+            border-radius: var(--border-radius-lg);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-3 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .value {
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--color-text-primary);
+        }
+
+        .metric-card {
+            background: var(--color-background-secondary);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 0.5px solid var(--color-border-tertiary);
+            font-size: 14px;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-row.total {
+            font-weight: 500;
+            font-size: 16px;
+            padding: 16px 0;
+            border-top: 2px solid var(--color-border-primary);
+            margin-top: 8px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: var(--color-background-primary);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .container {
+            padding: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 16px;
+            font-weight: 500;
+            margin-top: 0;
+            margin-bottom: 1rem;
+            color: var(--color-text-primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-group button {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .history-item {
+            padding: 12px;
+            border-bottom: 0.5px solid var(--color-border-tertiary);
+        }
+
+        .history-item-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .alert {
+            background: var(--color-background-info);
+            border: 0.5px solid var(--color-border-primary);
+            color: var(--color-text-info);
+            padding: 12px;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 1rem;
+            font-size: 13px;
+        }
+
+        .coords-group {
+            background: var(--color-background-secondary);
+            padding: 12px;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 12px;
+        }
+
+        .coords-group h3 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function RouteCalculator() {
+            // Coordenadas
+            const [coords, setCoords] = useState({
+                inicio: { lat: '', lng: '' },
+                punto1: { lat: '', lng: '' },
+                punto2: { lat: '', lng: '' },
+                punto3: { lat: '', lng: '' },
+                final: { lat: '', lng: '' }
+            });
+
+            const [kmCalculado, setKmCalculado] = useState(0);
+            const [kmConAumento, setKmConAumento] = useState(0);
+
+            // Unidad
+            const [tipoUnidad, setTipoUnidad] = useState('camioneta');
+            const [idUnidad, setIdUnidad] = useState('');
+
+            // Gastos adicionales
+            const [gastos, setGastos] = useState({
+                casetas: 0,
+                hospedaje: 0,
+                viaticos: 0,
+                aeropuerto: 0
+            });
+
+            // Historial y otros
+            const [history, setHistory] = useState([]);
+            const [showHistory, setShowHistory] = useState(false);
+            const [emailTo, setEmailTo] = useState('');
+            const [showEmailForm, setShowEmailForm] = useState(false);
+            const [emailSubject, setEmailSubject] = useState('Cotización de Servicios');
+            const [selectedQuoteForEmail, setSelectedQuoteForEmail] = useState(null);
+
+            const IVA_RATE = 0.16;
+            const CURRENCY = 'MXN';
+            const TARIFA_CAMIONETA = 25;
+            const TARIFA_CAMION = 35;
+            const AUMENTO_KM = 0.45;
+
+            useEffect(() => {
+                const saved = localStorage.getItem('calculatorRouteHistory');
+                if (saved) {
+                    try {
+                        setHistory(JSON.parse(saved));
+                    } catch (e) {
+                        console.error('Error loading history:', e);
+                    }
+                }
+            }, []);
+
+            // Fórmula Haversine para calcular distancia entre dos puntos
+            const calcularDistancia = (lat1, lon1, lat2, lon2) => {
+                const R = 6371; // Radio de la Tierra en km
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return R * c;
+            };
+
+            // Calcular kilometraje total
+            const calcularKilometraje = () => {
+                const puntos = [
+                    [parseFloat(coords.inicio.lat), parseFloat(coords.inicio.lng)],
+                    [parseFloat(coords.punto1.lat), parseFloat(coords.punto1.lng)],
+                    [parseFloat(coords.punto2.lat), parseFloat(coords.punto2.lng)],
+                    [parseFloat(coords.punto3.lat), parseFloat(coords.punto3.lng)],
+                    [parseFloat(coords.final.lat), parseFloat(coords.final.lng)]
+                ];
+
+                let distanciaTotal = 0;
+                for (let i = 0; i < puntos.length - 1; i++) {
+                    if (puntos[i][0] && puntos[i][1] && puntos[i + 1][0] && puntos[i + 1][1]) {
+                        distanciaTotal += calcularDistancia(puntos[i][0], puntos[i][1], puntos[i + 1][0], puntos[i + 1][1]);
+                    }
+                }
+
+                setKmCalculado(distanciaTotal);
+                const kmConAumento = distanciaTotal * (1 + AUMENTO_KM);
+                setKmConAumento(kmConAumento);
+            };
+
+            const handleCoordenada = (punto, campo, valor) => {
+                setCoords(prev => ({
+                    ...prev,
+                    [punto]: { ...prev[punto], [campo]: valor }
+                }));
+            };
+
+            const handleGasto = (gasto, valor) => {
+                setGastos(prev => ({ ...prev, [gasto]: parseFloat(valor) || 0 }));
+            };
+
+            const calculateTotals = () => {
+                const costoTransporte = kmConAumento * (tipoUnidad === 'camioneta' ? TARIFA_CAMIONETA : TARIFA_CAMION);
+                const totalGastosAdicionales = Object.values(gastos).reduce((a, b) => a + b, 0);
+                const subtotal = costoTransporte + totalGastosAdicionales;
+                const iva = subtotal * IVA_RATE;
+                const total = subtotal + iva;
+                return { costoTransporte, totalGastosAdicionales, subtotal, iva, total };
+            };
+
+            const { costoTransporte, totalGastosAdicionales, subtotal, iva, total } = calculateTotals();
+
+            const handleSaveToHistory = () => {
+                const quote = {
+                    id: Date.now(),
+                    date: new Date().toLocaleDateString('es-MX'),
+                    time: new Date().toLocaleTimeString('es-MX'),
+                    coords,
+                    kmCalculado,
+                    kmConAumento,
+                    tipoUnidad,
+                    idUnidad,
+                    gastos,
+                    costoTransporte,
+                    totalGastosAdicionales,
+                    subtotal,
+                    iva,
+                    total
+                };
+                const newHistory = [quote, ...history].slice(0, 10);
+                setHistory(newHistory);
+                localStorage.setItem('calculatorRouteHistory', JSON.stringify(newHistory));
+                alert('✓ Cotización guardada al historial');
+            };
+
+            const generateEmailBody = (quote) => {
+                let body = `COTIZACIÓN DE SERVICIOS DE TRANSPORTE\n`;
+                body += `${'='.repeat(60)}\n\n`;
+                body += `Fecha: ${quote.date}\n`;
+                body += `Hora: ${quote.time}\n\n`;
+
+                body += `INFORMACIÓN DEL RECORRIDO\n${'-'.repeat(60)}\n`;
+                body += `Kilometraje calculado: ${quote.kmCalculado.toFixed(2)} km\n`;
+                body += `Kilometraje con aumento (45%): ${quote.kmConAumento.toFixed(2)} km\n`;
+                body += `Tipo de unidad: ${quote.tipoUnidad === 'camioneta' ? 'Camioneta ($25/km)' : 'Camión ($35/km)'}\n`;
+                body += `ID de unidad: ${quote.idUnidad || 'N/A'}\n\n`;
+
+                body += `DESGLOSE DE COSTOS\n${'-'.repeat(60)}\n`;
+                body += `Costo de transporte: $${quote.costoTransporte.toFixed(2)} ${CURRENCY}\n`;
+
+                Object.entries(quote.gastos).forEach(([key, value]) => {
+                    if (value > 0) {
+                        const labels = {
+                            casetas: 'Casetas',
+                            hospedaje: 'Hospedaje',
+                            viaticos: 'Viáticos',
+                            aeropuerto: 'Uso de Aeropuerto'
+                        };
+                        body += `${labels[key]}: $${value.toFixed(2)} ${CURRENCY}\n`;
+                    }
+                });
+
+                body += `\nTotal gastos adicionales: $${quote.totalGastosAdicionales.toFixed(2)} ${CURRENCY}\n`;
+                body += `${'-'.repeat(60)}\n`;
+                body += `Subtotal: $${quote.subtotal.toFixed(2)} ${CURRENCY}\n`;
+                body += `IVA (16%): +$${quote.iva.toFixed(2)} ${CURRENCY}\n`;
+                body += `${'='.repeat(60)}\n`;
+                body += `TOTAL: $${quote.total.toFixed(2)} ${CURRENCY}\n`;
+                body += `${'='.repeat(60)}\n\n`;
+                body += `Generado con Calculadora de Rutas y Servicios`;
+
+                return body;
+            };
+
+            const handleSendEmail = () => {
+                if (!emailTo.trim()) {
+                    alert('Por favor ingresa un correo electrónico');
+                    return;
+                }
+
+                const emailBody = generateEmailBody(selectedQuoteForEmail);
+                const mailtoLink = `mailto:${encodeURIComponent(emailTo)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+
+                window.location.href = mailtoLink;
+                setEmailTo('');
+                setShowEmailForm(false);
+                setSelectedQuoteForEmail(null);
+                alert('Se abrirá tu cliente de correo. Revisa y envía el mensaje.');
+            };
+
+            const handlePrint = () => {
+                window.print();
+            };
+
+            const openEmailForm = (quote) => {
+                setSelectedQuoteForEmail(quote);
+                setEmailSubject('Cotización de Transporte - ' + quote.date);
+                setShowEmailForm(true);
+            };
+
+            const loadFromHistory = (quote) => {
+                setCoords(quote.coords);
+                setKmCalculado(quote.kmCalculado);
+                setKmConAumento(quote.kmConAumento);
+                setTipoUnidad(quote.tipoUnidad);
+                setIdUnidad(quote.idUnidad);
+                setGastos(quote.gastos);
+                setShowHistory(false);
+            };
+
+            return (
+                <div className="container">
+                    <div className="print-section">
+                        <h1>🚚 Calculadora de Rutas y Servicios de Transporte</h1>
+
+                        {/* BLOQUE KILÓMETROS */}
+                        <div className="card">
+                            <h2>📍 Kilómetros</h2>
+                            <p className="label" style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)' }}>
+                                Ingresa las coordenadas de tu ruta (latitud, longitud). El sistema calculará automáticamente la distancia.
+                            </p>
+
+                            <div className="coords-group">
+                                <h3>Coordenadas de Inicio</h3>
+                                <div className="grid-2">
+                                    <label>
+                                        <span className="label">Latitud</span>
+                                        <input type="number" step="0.000001" placeholder="21.1452" value={coords.inicio.lat} onChange={(e) => handleCoordenada('inicio', 'lat', e.target.value)} />
+                                    </label>
+                                    <label>
+                                        <span className="label">Longitud</span>
+                                        <input type="number" step="0.000001" placeholder="-86.8763" value={coords.inicio.lng} onChange={(e) => handleCoordenada('inicio', 'lng', e.target.value)} />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="coords-group">
+                                <h3>Punto 1</h3>
+                                <div className="grid-2">
+                                    <label>
+                                        <span className="label">Latitud</span>
+                                        <input type="number" step="0.000001" placeholder="21.2000" value={coords.punto1.lat} onChange={(e) => handleCoordenada('punto1', 'lat', e.target.value)} />
+                                    </label>
+                                    <label>
+                                        <span className="label">Longitud</span>
+                                        <input type="number" step="0.000001" placeholder="-86.9000" value={coords.punto1.lng} onChange={(e) => handleCoordenada('punto1', 'lng', e.target.value)} />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="coords-group">
+                                <h3>Punto 2</h3>
+                                <div className="grid-2">
+                                    <label>
+                                        <span className="label">Latitud</span>
+                                        <input type="number" step="0.000001" placeholder="21.3000" value={coords.punto2.lat} onChange={(e) => handleCoordenada('punto2', 'lat', e.target.value)} />
+                                    </label>
+                                    <label>
+                                        <span className="label">Longitud</span>
+                                        <input type="number" step="0.000001" placeholder="-86.8500" value={coords.punto2.lng} onChange={(e) => handleCoordenada('punto2', 'lng', e.target.value)} />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="coords-group">
+                                <h3>Punto 3</h3>
+                                <div className="grid-2">
+                                    <label>
+                                        <span className="label">Latitud</span>
+                                        <input type="number" step="0.000001" placeholder="21.4000" value={coords.punto3.lat} onChange={(e) => handleCoordenada('punto3', 'lat', e.target.value)} />
+                                    </label>
+                                    <label>
+                                        <span className="label">Longitud</span>
+                                        <input type="number" step="0.000001" placeholder="-86.7500" value={coords.punto3.lng} onChange={(e) => handleCoordenada('punto3', 'lng', e.target.value)} />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="coords-group">
+                                <h3>Coordenadas Finales</h3>
+                                <div className="grid-2">
+                                    <label>
+                                        <span className="label">Latitud</span>
+                                        <input type="number" step="0.000001" placeholder="21.5000" value={coords.final.lat} onChange={(e) => handleCoordenada('final', 'lat', e.target.value)} />
+                                    </label>
+                                    <label>
+                                        <span className="label">Longitud</span>
+                                        <input type="number" step="0.000001" placeholder="-86.6500" value={coords.final.lng} onChange={(e) => handleCoordenada('final', 'lng', e.target.value)} />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button onClick={calcularKilometraje} style={{ width: '100%', marginTop: '1rem', fontWeight: 500 }}>🔄 Calcular Kilometraje</button>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '1rem' }}>
+                                <div className="metric-card">
+                                    <p className="label">KM Calculado</p>
+                                    <p className="value">{kmCalculado.toFixed(2)} km</p>
+                                </div>
+                                <div className="metric-card">
+                                    <p className="label">KM con Aumento 45%</p>
+                                    <p className="value">{kmConAumento.toFixed(2)} km</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* BLOQUE UNIDAD */}
+                        <div className="card">
+                            <h2>🚛 Unidad</h2>
+                            <div className="grid-2">
+                                <label>
+                                    <span className="label">Tipo de Unidad</span>
+                                    <select value={tipoUnidad} onChange={(e) => setTipoUnidad(e.target.value)}>
+                                        <option value="camioneta">Camioneta ($25/km)</option>
+                                        <option value="camion">Camión ($35/km)</option>
+                                    </select>
+                                </label>
+                                <label>
+                                    <span className="label">ID de la Unidad</span>
+                                    <input type="text" placeholder="Ej: UN-001, UN-002" value={idUnidad} onChange={(e) => setIdUnidad(e.target.value)} />
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* BLOQUE GASTOS ADICIONALES */}
+                        <div className="card">
+                            <h2>💰 Gastos Adicionales</h2>
+                            <div className="grid-2">
+                                <label>
+                                    <span className="label">Casetas ({CURRENCY})</span>
+                                    <input type="number" step="0.01" value={gastos.casetas} onChange={(e) => handleGasto('casetas', e.target.value)} />
+                                </label>
+                                <label>
+                                    <span className="label">Hospedaje ({CURRENCY})</span>
+                                    <input type="number" step="0.01" value={gastos.hospedaje} onChange={(e) => handleGasto('hospedaje', e.target.value)} />
+                                </label>
+                                <label>
+                                    <span className="label">Viáticos ({CURRENCY})</span>
+                                    <input type="number" step="0.01" value={gastos.viaticos} onChange={(e) => handleGasto('viaticos', e.target.value)} />
+                                </label>
+                                <label>
+                                    <span className="label">Uso de Aeropuerto ({CURRENCY})</span>
+                                    <input type="number" step="0.01" value={gastos.aeropuerto} onChange={(e) => handleGasto('aeropuerto', e.target.value)} />
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* BLOQUE RESUMEN DE COSTOS */}
+                        <div className="card">
+                            <h2>📊 Resumen de Costos</h2>
+                            <div className="summary-row">
+                                <span>Costo de Transporte ({kmConAumento.toFixed(2)} km × ${tipoUnidad === 'camioneta' ? TARIFA_CAMIONETA : TARIFA_CAMION}/km)</span>
+                                <span>${costoTransporte.toFixed(2)}</span>
+                            </div>
+                            {Object.entries(gastos).filter(([, v]) => v > 0).map(([key, value]) => {
+                                const labels = { casetas: 'Casetas', hospedaje: 'Hospedaje', viaticos: 'Viáticos', aeropuerto: 'Uso de Aeropuerto' };
+                                return (
+                                    <div key={key} className="summary-row">
+                                        <span>{labels[key]}</span>
+                                        <span>${value.toFixed(2)}</span>
+                                    </div>
+                                );
+                            })}
+                            <div className="summary-row">
+                                <span style={{ fontWeight: 500 }}>Total Gastos Adicionales</span>
+                                <span style={{ fontWeight: 500 }}>${totalGastosAdicionales.toFixed(2)}</span>
+                            </div>
+                            <div className="summary-row">
+                                <span style={{ fontWeight: 500 }}>Subtotal</span>
+                                <span style={{ fontWeight: 500 }}>${subtotal.toFixed(2)}</span>
+                            </div>
+                            <div className="summary-row">
+                                <span>IVA (16%)</span>
+                                <span style={{ color: 'var(--color-text-warning)' }}>+${iva.toFixed(2)}</span>
+                            </div>
+                            <div className="summary-row total">
+                                <span>💰 Total a Pagar</span>
+                                <span style={{ color: 'var(--color-text-success)', fontSize: '18px' }}>${total.toFixed(2)} {CURRENCY}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* BOTONES */}
+                    <div className="no-print btn-group">
+                        <button onClick={handleSaveToHistory}>💾 Guardar Cotización</button>
+                        <button onClick={handlePrint}>🖨️ Imprimir</button>
+                        <button onClick={() => setShowHistory(!showHistory)}>{showHistory ? '✕ Cerrar' : '📋 Historial'}</button>
+                    </div>
+
+                    {/* HISTORIAL */}
+                    {showHistory && (
+                        <div className="card no-print">
+                            <h2>📋 Historial de Cotizaciones</h2>
+                            {history.length === 0 ? (
+                                <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>No hay cotizaciones guardadas</p>
+                            ) : (
+                                <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                    {history.map(quote => (
+                                        <div key={quote.id} className="history-item">
+                                            <div>
+                                                <p style={{ margin: 0, fontWeight: 500, fontSize: '14px' }}>{quote.date} - {quote.time}</p>
+                                                <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+                                                    {quote.kmConAumento.toFixed(2)} km | {quote.tipoUnidad === 'camioneta' ? 'Camioneta' : 'Camión'} | Total: ${quote.total.toFixed(2)} {CURRENCY}
+                                                </p>
+                                            </div>
+                                            <div className="history-item-buttons">
+                                                <button onClick={() => loadFromHistory(quote)} style={{ fontSize: '12px', padding: '6px 12px' }}>📂 Cargar</button>
+                                                <button onClick={() => openEmailForm(quote)} style={{ fontSize: '12px', padding: '6px 12px' }}>✉️ Enviar</button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* MODAL EMAIL */}
+                    {showEmailForm && (
+                        <div className="modal-overlay" onClick={() => setShowEmailForm(false)}>
+                            <div className="modal" onClick={(e) => e.stopPropagation()}>
+                                <h2>Enviar Cotización por Email</h2>
+                                <label style={{ display: 'block', marginBottom: '1rem' }}>
+                                    <span className="label">Correo Electrónico del Destinatario</span>
+                                    <input type="email" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} placeholder="cliente@example.com" />
+                                </label>
+                                <label style={{ display: 'block', marginBottom: '1.5rem' }}>
+                                    <span className="label">Asunto del Email</span>
+                                    <input type="text" value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
+                                </label>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <button onClick={() => setShowEmailForm(false)} style={{ flex: 1 }}>Cancelar</button>
+                                    <button onClick={handleSendEmail} className="btn-primary" style={{ flex: 1 }}>Enviar Email</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<RouteCalculator />);
+    </script>
+</body>
+</html>
