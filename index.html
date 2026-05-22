@@ -323,7 +323,7 @@
             const CURRENCY = 'MXN';
             const TARIFA_CAMIONETA = 12;
             const TARIFA_CAMION = 15;
-            const AUMENTO_KM = 0.35;
+            const AUMENTO_KM = 0.45;
 
             useEffect(() => {
                 const saved = localStorage.getItem('calculatorRouteHistory');
@@ -423,7 +423,7 @@
 
                 body += `INFORMACIÓN DEL RECORRIDO\n${'-'.repeat(60)}\n`;
                 body += `Kilometraje calculado: ${quote.kmCalculado.toFixed(2)} km\n`;
-                body += `Kilometraje con aumento (45%): ${quote.kmConAumento.toFixed(2)} km\n`;
+                body += `Kilometraje con vacío: ${quote.kmConAumento.toFixed(2)} km\n`;
                 body += `Tipo de unidad: ${quote.tipoUnidad === 'camioneta' ? 'Camioneta ($12/km)' : 'Camión ($15/km)'}\n`;
                 body += `ID de unidad: ${quote.idUnidad || 'N/A'}\n\n`;
 
@@ -593,8 +593,8 @@
                                 <label>
                                     <span className="label">Tipo de Unidad</span>
                                     <select value={tipoUnidad} onChange={(e) => setTipoUnidad(e.target.value)}>
-                                        <option value="camioneta">Camioneta ($25/km)</option>
-                                        <option value="camion">Camión ($35/km)</option>
+                                        <option value="camioneta">Camioneta ($12/km)</option>
+                                        <option value="camion">Camión ($15/km)</option>
                                     </select>
                                 </label>
                                 <label>
